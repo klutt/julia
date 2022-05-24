@@ -17,7 +17,7 @@
 #     fields::Vector{Any} # elements are other type lattice members
 # end
 import Core: Const, PartialStruct
-function PartialStruct(typ::DataType, fields::Vector{Any})
+function PartialStruct(@nospecialize(typ), fields::Vector{Any})
     for i = 1:length(fields) assert_nested_type(fields[i]) end
     return Core._PartialStruct(typ, fields)
 end

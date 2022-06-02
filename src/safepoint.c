@@ -175,16 +175,21 @@ void jl_safepoint_end_gc(void)
     jl_mach_gc_end();
 #  endif
     uv_mutex_unlock(&safepoint_lock);
+    uv_cond_broadcast(&safepoint_cond);
 }
 
 void jl_safepoint_wait_gc(void)
 {
     // The thread should have set this is already
+    uv_cond_broadcast(&safepoint_cond);
     assert(jl_atomic_load_relaxed(&jl_current_task->ptls->gc_state) != 0);
     // Use normal volatile load in the loop for speed until GC finishes.
     // Then use an acquire load to make sure the GC result is visible on this thread.
     while (jl_atomic_load_relaxed(&jl_gc_running) || jl_atomic_load_acquire(&jl_gc_running)) {
-        jl_cpu_pause(); // yield?
+        uv_mutex_lock(&safepoint_lock);
+        if (jl_atomic_load_relaxed(&jl_gc_running))
+            uv_cond_wait(&safepoint_cond, &safepoint_lock);
+        uv_mutex_unlock(&safepoint_lock);
     }
 }
 

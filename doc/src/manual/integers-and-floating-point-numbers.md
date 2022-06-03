@@ -100,12 +100,23 @@ UInt64
 ```
 
 Larger integer literals that cannot be represented using only 32 bits but can be represented in
-64 bits always create 64-bit integers, regardless of the system type:
+64 bits always create 64-bit integers, regardless of the system type: 
 
 ```jldoctest
 # 32-bit or 64-bit system:
 julia> typeof(3000000000)
 Int64
+```
+
+More generally, an integer literal that is not prefixed with `0x`, `0o` or `0b` will create the 
+smallest integer that is both at least as big as the system type and is able to hold the value:
+
+```jldoctest
+julia> typeof(30000000000000000000)
+Int128
+
+julia> typeof(300000000000000000000000000000000000000)
+BigInt
 ```
 
 Unsigned integers are input and output using the `0x` prefix and hexadecimal (base 16) digits
